@@ -36,7 +36,13 @@ h4 {
 #latest_firmware {
 	color: #1d3557;
 }	
+.gr {
+    color: green;
+}
 
+.rd {
+    color: red;
+}
 /* Sensor container styling */
 #dht11-sensor {
     margin: 20px 0;
