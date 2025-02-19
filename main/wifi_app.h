@@ -9,6 +9,7 @@
 #define MAIN_WIFI_APP_H_
 
 #include "esp_netif.h"
+#include "esp_wifi_types.h"
 #include "portmacro.h"
 #include "http_server.h"
 
@@ -38,6 +39,7 @@ typedef enum wifi_app_message
 	WIFI_APP_MSG_START_HTTP_SERVER = 0,
 	WIFI_APP_MSG_CONNECTING_FROM_HTTP_SERVER,
 	WIFI_APP_MSG_STA_CONNECTED_GOT_IP,	
+	WIFI_APP_MSG_STA_DISCONNECTED,
 } wifi_app_message_e;
 
 // Structure for the message queue
@@ -54,6 +56,9 @@ BaseType_t wifi_app_send_message(wifi_app_message_e msgID);
 // Starts the WiFi RTOS Task
 void wifi_app_start(void);
 
-
+/**
+* Gets the wifi configuration 
+*/
+wifi_config_t* wifi_app_get_wifi_config(void);
 
 #endif /* MAIN_WIFI_APP_H_ */
