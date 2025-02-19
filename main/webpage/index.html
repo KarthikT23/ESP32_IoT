@@ -40,6 +40,19 @@
 		</div>
 	</div>
 	<hr>
+	<div id = "WiFiConnect">
+		<h2>ESP32 WiFi Connect</h2>
+		<section>
+			<input type="text" id="connect_ssid" maxlength="32" placeholder="SSID" value="">
+			<input type="password" id="connect_pass" maxlength="64" placeholder="Password" value="">
+			<input type="checkbox" onclick="showPassword()">Show Password
+		</section>
+		<div class="buttons">
+			<input type="button" id="connect_wifi" value="Connect" />
+		</div>
+		<div id="wifi_connect_credentials_errors"></div>
+		<h4 id="wifi_connect_status"></h4>
+	</div>
 		
 	</body>
 </html>
