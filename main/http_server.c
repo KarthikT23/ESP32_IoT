@@ -8,6 +8,9 @@
 #include "esp_err.h"
 #include "esp_http_server.h"
 #include "esp_log.h"
+#include "esp_netif.h"
+#include "esp_netif_ip_addr.h"
+#include "esp_netif_types.h"
 #include "esp_timer.h"
 #include "esp_wifi_types.h"
 #include "freertos/idf_additions.h"
@@ -24,6 +27,7 @@
 #include "sys/param.h"
 #include <inttypes.h>
 #include "DHT11.h"
+#include "esp_wifi.h"
 
 // Tag used for ESP Serial console messages
 static const char TAG[] = "http_server";
@@ -407,6 +411,48 @@ static esp_err_t http_server_wifi_connect_status_json_handler(httpd_req_t *req)
 	return ESP_OK;
 }
 
+/**
+* wifiConnectInfo handler updates the web page with connection information
+@param req HTTP request for which the uri needs to be handled
+@return ESP_OK 
+*/
+static esp_err_t http_server_get_wifi_connect_info_json_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "/wifiConnectInfo.json requested");
+    
+    char ipInfoJSON[200];
+    memset(ipInfoJSON, 0, sizeof(ipInfoJSON));
+    
+    char ip[IP4ADDR_STRLEN_MAX];
+    char netmask[IP4ADDR_STRLEN_MAX];
+    char gw[IP4ADDR_STRLEN_MAX];
+    
+    if (g_wifi_connect_status == HTTP_MSG_WIFI_CONNECT_SUCCESS)
+    {
+        wifi_ap_record_t wifi_data;
+        ESP_ERROR_CHECK(esp_wifi_sta_get_ap_info(&wifi_data));
+        char *ssid = (char*)wifi_data.ssid;
+        
+        esp_netif_ip_info_t ip_info;
+        ESP_ERROR_CHECK(esp_netif_get_ip_info(esp_netif_sta, &ip_info));
+        esp_ip4addr_ntoa(&ip_info.ip, ip, IP4ADDR_STRLEN_MAX);
+        esp_ip4addr_ntoa(&ip_info.netmask, netmask, IP4ADDR_STRLEN_MAX);
+        esp_ip4addr_ntoa(&ip_info.gw, gw, IP4ADDR_STRLEN_MAX);
+        
+        // Fixed JSON formatting
+        sprintf(ipInfoJSON, "{\"ip\":\"%s\",\"netmask\":\"%s\",\"gw\":\"%s\",\"ap\":\"%s\"}", 
+                ip, netmask, gw, ssid);
+        
+        // Add debug logging
+        ESP_LOGI(TAG, "Sending connection info JSON: %s", ipInfoJSON);
+    }
+    
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, ipInfoJSON, strlen(ipInfoJSON));
+    
+    return ESP_OK;
+}
+
 /* Sets up the default httpd server configuration
 @return http server instance handle if successful, NULL otherwise.
 */
@@ -528,7 +574,7 @@ static httpd_handle_t http_server_configure(void)
 		};
 		httpd_register_uri_handler(http_server_handle, &wifi_connect_json);
 		
-				// register wifiConnectStatus.json handler
+		// register wifiConnectStatus.json handler
 		httpd_uri_t wifi_connect_status_json = {
 			.uri = "/wifiConnectStatus.json",
 			.method = HTTP_POST,
@@ -536,6 +582,15 @@ static httpd_handle_t http_server_configure(void)
 			.user_ctx = NULL
 		};
 		httpd_register_uri_handler(http_server_handle, &wifi_connect_status_json);
+		
+		// register wifiConnectInfo.json handler
+		httpd_uri_t wifi_connect_info_json = {
+			.uri = "/wifiConnectInfo.json",
+			.method = HTTP_GET,
+			.handler = http_server_get_wifi_connect_info_json_handler,
+			.user_ctx = NULL
+		};
+		httpd_register_uri_handler(http_server_handle, &wifi_connect_info_json);
 		
 		return http_server_handle;
 	}
