@@ -239,6 +239,23 @@ static void wifi_app_task(void *pvParameters)
 				http_server_monitor_send_message(HTTP_MSG_WIFI_CONNECT_SUCCESS);
 				
 				break;
+			
+			case WIFI_APP_MSG_USER_REQUESTED_STA_DISCONNECT:
+    			ESP_LOGI(TAG, "WIFI_APP_MSG_USER_REQUESTED_STA_DISCONNECT");
+    
+    			// Set retry count to max to prevent auto-reconnect
+    			g_retry_number = MAX_CONNECTION_RETRIES;
+    
+    			// Disconnect from AP
+    			ESP_ERROR_CHECK(esp_wifi_disconnect());
+    
+    			// Stop station mode
+    			ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+    
+    			// Update LED status
+    			rgb_led_http_server_started();
+    
+    			break;
 				
 			case WIFI_APP_MSG_STA_DISCONNECTED:
 				ESP_LOGI(TAG, "WIFI_APP_MSG_STA_DISCONNECTED");
@@ -246,7 +263,7 @@ static void wifi_app_task(void *pvParameters)
 				http_server_monitor_send_message(HTTP_MSG_WIFI_CONNECT_FAIL);
 				
 				break;	
-				
+
 			default:
 				break;		 	
 		}
