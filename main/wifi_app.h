@@ -40,6 +40,7 @@ typedef enum wifi_app_message
 	WIFI_APP_MSG_CONNECTING_FROM_HTTP_SERVER,
 	WIFI_APP_MSG_STA_CONNECTED_GOT_IP,	
 	WIFI_APP_MSG_STA_DISCONNECTED,
+	WIFI_APP_MSG_USER_REQUESTED_STA_DISCONNECT,
 } wifi_app_message_e;
 
 // Structure for the message queue
