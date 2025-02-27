@@ -164,21 +164,21 @@ static void DHT11_task(void *pvParameter)
     
     for (;;)
     {
-        ESP_LOGI(TAG, "Reading DHT11 sensor...");
+        //ESP_LOGI(TAG, "Reading DHT11 sensor...");
         int ret = dht11_read(&dht_sensor, 5);  // Try 5 times before giving up
         
         if (ret == DHT_OK)
         {
-            ESP_LOGI(TAG, "Temperature: %.1f C", dht_sensor.temperature);
-            ESP_LOGI(TAG, "Humidity: %.1f%%", dht_sensor.humidity);
+            //ESP_LOGI(TAG, "Temperature: %.1f C", dht_sensor.temperature);
+            //ESP_LOGI(TAG, "Humidity: %.1f%%", dht_sensor.humidity);
         }
         else if (ret == DHT_CHECKSUM_ERROR)
         {
-            ESP_LOGE(TAG, "Checksum error");
+            //ESP_LOGE(TAG, "Checksum error");
         }
         else if (ret == DHT_TIMEOUT_ERROR)
         {
-            ESP_LOGE(TAG, "Sensor timeout");
+            //ESP_LOGE(TAG, "Sensor timeout");
         }
         
         // Wait at least 2 seconds before next reading
