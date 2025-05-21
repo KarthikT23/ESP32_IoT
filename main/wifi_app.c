@@ -45,6 +45,7 @@ static EventGroupHandle_t wifi_app_event_group;
 const int WIFI_APP_CONNECTING_USING_SAVED_CREDS_BIT			= BIT0;
 const int WIFI_APP_MSG_CONNECTING_FROM_HTTP_SERVER_BIT 		= BIT1;
 const int WIFI_APP_MSG_USER_REQUESTED_STA_DISCONNECT_BIT 	= BIT2;
+const int WIFI_APP_STA_CONNECTED_GOT_IP_BIT					= BIT3;
 
 // Queue handle used to manipulate the main queue of events
 static QueueHandle_t wifi_app_queue_handle;
@@ -262,6 +263,9 @@ static void wifi_app_task(void *pvParameters)
 				
 			case WIFI_APP_MSG_STA_CONNECTED_GOT_IP:
 				ESP_LOGI(TAG, "WIFI_APP_MSG_STA_CONNECTED_GOT_IP");
+				
+				xEventGroupSetBits(wifi_app_event_group, WIFI_APP_STA_CONNECTED_GOT_IP_BIT);
+				
 				rgb_led_wifi_connected();
 				http_server_monitor_send_message(HTTP_MSG_WIFI_CONNECT_SUCCESS);
 				
@@ -283,19 +287,25 @@ static void wifi_app_task(void *pvParameters)
 			
 			case WIFI_APP_MSG_USER_REQUESTED_STA_DISCONNECT:
     			ESP_LOGI(TAG, "WIFI_APP_MSG_USER_REQUESTED_STA_DISCONNECT");
-    			xEventGroupSetBits(wifi_app_event_group, WIFI_APP_MSG_USER_REQUESTED_STA_DISCONNECT_BIT);
+    			
+    			eventBits = xEventGroupGetBits(wifi_app_event_group);
+    			
+    			if (eventBits & WIFI_APP_STA_CONNECTED_GOT_IP_BIT)
+    			{
+					xEventGroupSetBits(wifi_app_event_group, WIFI_APP_MSG_USER_REQUESTED_STA_DISCONNECT_BIT);
     
-    			// Set retry count to max to prevent auto-reconnect
-    			g_retry_number = MAX_CONNECTION_RETRIES;
+    				// Set retry count to max to prevent auto-reconnect
+    				g_retry_number = MAX_CONNECTION_RETRIES;
     
-    			// Disconnect from AP
-    			ESP_ERROR_CHECK(esp_wifi_disconnect());
-    			app_nvs_clear_sta_creds();
-    			// Stop station mode
-    			ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+    				// Disconnect from AP
+    				ESP_ERROR_CHECK(esp_wifi_disconnect());
+    				app_nvs_clear_sta_creds();
+    				// Stop station mode
+    				ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
     
-    			// Update LED status
-    			rgb_led_http_server_started();
+    				// Update LED status
+    				rgb_led_http_server_started();
+				}
     
     			break;
 				
@@ -325,7 +335,11 @@ static void wifi_app_task(void *pvParameters)
 				{
 					ESP_LOGI(TAG, "WIFI_APP_MSG_STA_DISCONNECTED: Attempt failed, check wifi access point availability"); // Adjust this case to your needs - maybe you want to keep trying to connect
 				}
-			
+				
+				if (eventBits & WIFI_APP_STA_CONNECTED_GOT_IP_BIT)
+				{
+					xEventGroupClearBits(wifi_app_event_group, WIFI_APP_STA_CONNECTED_GOT_IP_BIT);
+				}
 				break;	
 
 			default:
@@ -371,3 +385,4 @@ void wifi_app_start(void)
 	xTaskCreatePinnedToCore(&wifi_app_task, "wifi_app_task", WIFI_APP_TASK_STACK_SIZE, NULL, WIFI_APP_TASK_PRIORITY, NULL, WIFI_APP_TASK_CORE_ID);
 	
 }
+
