@@ -11,7 +11,7 @@
 #include "nvs_flash.h"
 #include "driver/gpio.h"
 #include "portmacro.h"
-#include "DHT11.h"
+#include "DHT22.h"
 #include "rgb_led.h"
 #include "wifi_app.h"
 
