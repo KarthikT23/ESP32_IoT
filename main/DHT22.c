@@ -208,5 +208,5 @@ float DHT22_get_humidity(void)
 void DHT22_task_start(void)
 {
     dht_sensor.dht22_pin = DHT_GPIO;
-    xTaskCreatePinnedToCore(&DHT22_task, "DHT22_task", DHT11_TASK_STACK_SIZE, NULL, DHT11_TASK_PRIORITY, NULL, DHT11_TASK_CORE_ID);
+    xTaskCreatePinnedToCore(&DHT22_task, "DHT22_task", DHT22_TASK_STACK_SIZE, NULL, DHT22_TASK_PRIORITY, NULL, DHT22_TASK_CORE_ID);
 }
