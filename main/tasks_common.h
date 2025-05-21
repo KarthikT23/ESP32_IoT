@@ -23,10 +23,15 @@
 #define HTTP_SERVER_MONITOR_PRIORITY			3
 #define HTTP_SERVER_MONITOR_CORE_ID				0
 
-// DHT11 Sensor task
-#define DHT11_TASK_STACK_SIZE					4096
-#define DHT11_TASK_PRIORITY						5
-#define DHT11_TASK_CORE_ID						1
+// Wifi Reset Button task
+#define WIFI_RESET_BUTTON_TASK_STACK_SIZE		2048
+#define WIFI_RESET_BUTTON_TASK_PRIORITY			6
+#define WIFI_RESET_BUTTON_TASK_CORE_ID			0
+
+// DHT22 Sensor task
+#define DHT22_TASK_STACK_SIZE					4096
+#define DHT22_TASK_PRIORITY						5
+#define DHT22_TASK_CORE_ID						1
 
 
 #endif /* MAIN_TASKS_COMMON_H_ */
