@@ -26,7 +26,7 @@
 #include "esp_ota_ops.h"
 #include "sys/param.h"
 #include <inttypes.h>
-#include "DHT11.h"
+#include "DHT22.h"
 #include "esp_wifi.h"
 
 // Tag used for ESP Serial console messages
