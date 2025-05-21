@@ -14,7 +14,7 @@
 #include "DHT22.h"
 #include "rgb_led.h"
 #include "wifi_app.h"
-
+#include "wifi_reset_button.h"
 // Application entry point
 
 void app_main(void)
@@ -30,6 +30,9 @@ void app_main(void)
 	
 	// Start WiFi
 	wifi_app_start();
+	
+	// Configure Wifi reset button	
+	wifi_reset_button_config();
 	
 	// Start DHT11 sensor task
 	DHT11_task_start();
