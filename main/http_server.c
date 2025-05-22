@@ -7,6 +7,7 @@
 
 #include "esp_err.h"
 #include "esp_http_server.h"
+#include "esp_interface.h"
 #include "esp_log.h"
 #include "esp_netif.h"
 #include "esp_netif_ip_addr.h"
@@ -16,6 +17,7 @@
 #include "freertos/idf_additions.h"
 #include "http_parser.h"
 #include "http_server.h"
+#include "sntp_time_sync.h"
 #include "portmacro.h"
 #include "tasks_common.h"
 #include "unity_internals.h"
@@ -26,6 +28,7 @@
 #include "esp_ota_ops.h"
 #include "sys/param.h"
 #include <inttypes.h>
+
 #include "DHT22.h"
 #include "esp_wifi.h"
 
@@ -41,6 +44,8 @@ static int g_fw_update_status = OTA_UPDATE_PENDING;
 // HTTP Server task handle
 static httpd_handle_t http_server_handle = NULL;
 
+// Local time status
+static bool g_is_local_time_set = false;
 
 // HTTP Server task handle
 static TaskHandle_t task_http_server_monitor = NULL;
@@ -136,6 +141,12 @@ static void http_server_monitor(void *parameter)
 				case HTTP_MSG_OTA_UPDATE_FAILED:
 					ESP_LOGI(TAG, "HTTP_MSG_OTA_UPDATE_FAILED");
 					g_fw_update_status = OTA_UPDATE_FAILED;
+				
+					break;	
+					
+				case HTTP_MSG_TIME_SERVICE_INITIALIZED:
+					ESP_LOGI(TAG, "HTTP_MSG_TIME_SERVICE_INITIALIZED");
+					g_is_local_time_set = true;
 				
 					break;	
 									
@@ -342,8 +353,8 @@ static esp_err_t http_server_get_dht_sensor_readings_json_handler(httpd_req_t *r
     
     char dhtSensorJSON[100];
     sprintf(dhtSensorJSON, "{\"temperature\":\"%.1f\",\"humidity\":\"%.1f\"}", 
-            DHT11_get_temperature(), 
-            DHT11_get_humidity());
+            DHT22_get_temperature(), 
+            DHT22_get_humidity());
     
     httpd_resp_set_type(req, "application/json");
     httpd_resp_send(req, dhtSensorJSON, strlen(dhtSensorJSON));
@@ -474,6 +485,65 @@ static esp_err_t http_server_wifi_disconnect_json_handler(httpd_req_t *req)
     httpd_resp_set_type(req, "application/json");
     httpd_resp_send(req, "{\"status\":\"disconnecting\"}", strlen("{\"status\":\"disconnecting\"}"));
 	
+	return ESP_OK;
+}
+
+/**
+* localTime.json handler responds by sending the local time
+@param req HTTP request for which the uri needs to be handled
+@return ESP_OK 
+*/
+static esp_err_t http_server_get_local_time_json_handler(httpd_req_t *req)
+{
+	ESP_LOGI(TAG, "/localTime.json requested");
+	char localTimeJSON[150] = {0};
+	
+	// Debug: Log the time service status
+	ESP_LOGI(TAG, "g_is_local_time_set: %s", g_is_local_time_set ? "true" : "false");
+	
+	if (g_is_local_time_set)
+	{
+		char* time_str = sntp_time_sync_get_time();
+		ESP_LOGI(TAG, "Time string from SNTP: %s", time_str);
+		
+		// Check if time string is valid (not empty)
+		if (time_str != NULL && strlen(time_str) > 0)
+		{
+			sprintf(localTimeJSON, "{\"time\":\"%s\",\"status\":\"synchronized\"}", time_str);
+		}
+		else
+		{
+			sprintf(localTimeJSON, "{\"time\":\"Synchronizing...\",\"status\":\"pending\"}");
+		}
+	}
+	else
+	{
+		sprintf(localTimeJSON, "{\"time\":\"Time service not initialized\",\"status\":\"not_initialized\"}");
+	}
+	
+	ESP_LOGI(TAG, "Sending JSON: %s", localTimeJSON);
+	
+	httpd_resp_set_type(req, "application/json");
+	httpd_resp_send(req, localTimeJSON, strlen(localTimeJSON));
+	return ESP_OK;
+}
+/**
+* apSSID.json handler responds by sending the AP SSID
+@param req HTTP request for which the uri needs to be handled
+@return ESP_OK 
+*/
+static esp_err_t http_server_get_ap_ssid_json_handler(httpd_req_t *req)
+{
+	ESP_LOGI(TAG, "/apSSID.json requested");
+	char ssidJSON[50];
+	
+	wifi_config_t *wifi_config = wifi_app_get_wifi_config();
+	esp_wifi_get_config(ESP_IF_WIFI_AP, wifi_config);
+	char *ssid = (char*)wifi_config->ap.ssid;
+	sprintf(ssidJSON, "{\"ssid\":\"%s\"}", ssid);
+	
+	httpd_resp_set_type(req, "application/json");
+	httpd_resp_send(req, ssidJSON, strlen(ssidJSON));
 	return ESP_OK;
 }
 
@@ -624,6 +694,24 @@ static httpd_handle_t http_server_configure(void)
 			.user_ctx = NULL
 		};
 		httpd_register_uri_handler(http_server_handle, &wifi_disconnect_json);
+		
+		// register localTime.json handler
+		httpd_uri_t local_time_json = {
+			.uri = "/localTime.json",
+			.method = HTTP_GET,
+			.handler = http_server_get_local_time_json_handler,
+			.user_ctx = NULL
+		};
+		httpd_register_uri_handler(http_server_handle, &local_time_json);
+		
+		// register apSSID.json handler
+		httpd_uri_t ap_ssid_json = {
+			.uri = "/apSSID.json",
+			.method = HTTP_GET,
+			.handler = http_server_get_ap_ssid_json_handler,
+			.user_ctx = NULL
+		};
+		httpd_register_uri_handler(http_server_handle, &ap_ssid_json);
 		
 		return http_server_handle;
 	}
