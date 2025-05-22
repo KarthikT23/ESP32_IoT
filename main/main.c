@@ -10,13 +10,22 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "driver/gpio.h"
-#include "portmacro.h"
 #include "DHT22.h"
+#include "portmacro.h"
 #include "rgb_led.h"
 #include "wifi_app.h"
+#include "esp_log.h"
+#include "sntp_time_sync.h"
 #include "wifi_reset_button.h"
 // Application entry point
 
+static const char TAG[] = "main";
+
+void wifi_application_connected_events(void)
+{
+	ESP_LOGI(TAG, "Wifi Application Connected!");
+	sntp_time_sync_task_start();
+}
 void app_main(void)
 {
 	// Initialize NVS
@@ -35,6 +44,10 @@ void app_main(void)
 	wifi_reset_button_config();
 	
 	// Start DHT11 sensor task
-	DHT11_task_start();
+	DHT22_task_start();
+	
+	// Set connected event callback
+	wifi_app_set_callback(&wifi_application_connected_events);
 }
+
 
