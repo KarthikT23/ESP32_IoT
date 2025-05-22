@@ -11,9 +11,14 @@ var wifiConnectInterval = null;
 $(document).ready(function(){
 	getUpdateStatus();
     startDHTSensorInterval();
+    startLocalTimeInterval();
+    getSSID();
     getConnectInfo();
     $("#connect_wifi").on("click", function(){
         checkCredentials();
+    });
+    $("#disconnect_wifi").on("click", function(){
+        disconnectWifi();
     });
 });   
 
@@ -247,7 +252,7 @@ function checkCredentials()
     }
     if (credsOk == false)
     {
-        $("#wifi_connect_credentials_errors").html("errorList");
+        $("#wifi_connect_credentials_errors").html(errorList);
     }
     else
     {
@@ -275,10 +280,10 @@ function showPassword()
 /**
  * Gets the connection information for displaying on the web page
  */
-function getConnectInfo()
-{
-    $.getJSON('/wifiConnectInfo.json', function(data)
-    {
+function getConnectInfo() {
+    $.getJSON('/wifiConnectInfo.json', function(data) {
+        console.log("Received connection info:", data);  // Debug log
+        
         $("#connected_ap_label").html("Connected to:");
         $("#connected_ap").text(data["ap"]);
 
@@ -290,7 +295,68 @@ function getConnectInfo()
 
         $("#gateway_label").html("Gateway:");
         $("#wifi_connect_gw").text(data["gw"]);
-
+        document.getElementById('ConnectInfo').style.display = "block";
         document.getElementById('disconnect_wifi').style.display = "block";
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.error("Failed to get connection info:", textStatus, errorThrown);
+    });
+}
+
+/**
+ * Disconnects Wifi once the disconnect button is pressed and reloads the webpage
+ */
+function disconnectWifi()
+{
+    $.ajax({
+        url: '/wifiDisconnect.json',
+        dataType: 'json',
+        method: 'DELETE',
+        cache: false,
+        data: { 'timestamp': Date.now() }
+    });
+    // Update the web page
+    setTimeout("location.reload(true);", 2000);
+}
+/**
+ * Gets the Local time
+    Connect the ESP32 to the internet and time will be updated
+*/
+function getLocalTime()
+{
+    console.log("Requesting local time...");  // Debug log
+    
+    $.getJSON('/localTime.json', function(data) {
+        console.log("Received time data:", data);  // Debug log
+        
+        if (data.time && data.time !== "") {
+            $("#local_time").text(data.time);
+            console.log("Updated time display with:", data.time);
+        } else {
+            $("#local_time").text("Time not available");
+            console.log("Time not available in response");
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.error("Failed to get local time:", textStatus, errorThrown);
+        $("#local_time").text("Failed to get time");
+    });
+}
+/*
+* Sets the interval for displaying local time
+*/
+function startLocalTimeInterval()
+{
+    // Get time immediately when page loads
+    getLocalTime();
+    // Then set interval to update every 10 seconds
+    setInterval(getLocalTime, 10000);
+}
+
+/**
+ * Gets the ESP32's access point SSID for displaying on the web page
+ */
+function getSSID()
+{
+    $.getJSON('/apSSID.json', function(data) {
+        $("#ap_ssid").text(data["ssid"]);
     });
 }
