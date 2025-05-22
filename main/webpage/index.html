@@ -13,7 +13,21 @@
 	<header>
 		<h1>ESP32 Application Development</h1>
 	</header>
-		
+
+	<div id = "EspSSID">
+		<h2>ESP32 SSID</h2>
+		<label for="ap_ssid">Access Point SSID:</label>
+		<div id = "ap_ssid"></div>
+	</div>
+	<hr>
+
+	<div id = "LocalTime">
+		<h2>SNTP Time Synchronization</h2>
+		<label for="local_time">Connect to WiFi for Local time:</label>
+		<div id = "local_time"></div>
+	</div>
+	<hr>		
+	
 	<div id="OTA">
 		<h2>ESP32 Firmware Update</h2>
 		<label id="latest_firmware_label">Latest Firmware: </label>
@@ -54,7 +68,7 @@
 		<div id="wifi_connect_credentials_errors"></div>
 		<h4 id="wifi_connect_status"></h4>
 	</div>
-	<div id = "ConnectInfo">
+	<div id="ConnectInfo" style="display: none;">
 		<section>
 			<div id = "connected_ap_label"></div> <div id = "connected_ap"></div>
 		</section>
