@@ -213,6 +213,7 @@ body {
     font-weight: 600;
     color: var(--text-primary);
     font-family: monospace;
+    font-size: 1.125rem; /* 18px */
 }
 
 /* Sensor Grid */
@@ -276,7 +277,7 @@ body {
 }
 
 .sensor-value {
-    font-size: var(--font-size-4xl);
+    font-size: 4rem; /* Much larger */
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1;
@@ -523,6 +524,7 @@ body {
     font-family: monospace;
     color: var(--text-primary);
     font-weight: 600;
+    font-size: 1.125rem; /* 18px */
 }
 
 /* Status Messages */
