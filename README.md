@@ -12,3 +12,4 @@ IoT Application Development with the ESP32 Using the ESP-IDF
 
 
 # New Webpage
+![192 168 0 3_](https://github.com/user-attachments/assets/2eac458a-91e0-4468-af1c-0302e2dcf072)
