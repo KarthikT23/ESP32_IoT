@@ -477,11 +477,12 @@ class ESP32Controller {
                     // Connection successful
                     this.showStatusMessage('Connection Success!', 'success', 'wifi_connect_status');
                     this.stopWifiStatusPolling();
-                    
-                    // Reset button
+    
+                    // Reset button properly
                     connectBtn.disabled = false;
-                    connectBtn.innerHTML = '<i class="fas fa-plug"></i> Connect';
-                    
+                    connectBtn.innerHTML = '<i class="fas fa-check"></i> Connected';
+                    connectBtn.style.background = 'var(--success-color)';
+    
                     // Get connection info
                     setTimeout(() => this.getConnectionInfo(), 1000);
                 }
