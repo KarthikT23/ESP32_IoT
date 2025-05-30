@@ -62,6 +62,30 @@
     --transition-slow: 0.5s ease-in-out;
 }
 
+/* Light Theme Variables */
+[data-theme="light"] {
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --secondary-color: #64748b;
+    --success-color: #059669;
+    --success-hover: #047857;
+    --danger-color: #dc2626;
+    --danger-hover: #b91c1c;
+    --warning-color: #d97706;
+    --background-primary: #f8fafc;
+    --background-secondary: #ffffff;
+    --background-tertiary: #f1f5f9;
+    --surface-color: #ffffff;
+    --surface-hover: #f8fafc;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --shadow-light: rgba(0, 0, 0, 0.05);
+    --shadow-medium: rgba(0, 0, 0, 0.1);
+    --shadow-heavy: rgba(0, 0, 0, 0.25);
+}
+
 body {
     font-family: var(--font-family);
     background: var(--background-primary);
@@ -75,13 +99,13 @@ body {
 }
 
 .container {
-    max-width: 1400px;
+    max-width: 1800px;
     margin: 0 auto;
-    padding: var(--spacing-md);
+    padding: var(--spacing-lg);
     height: 100vh;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--spacing-lg);
 }
 
 /* Header Styles */
@@ -101,6 +125,25 @@ body {
     justify-content: space-between;
     flex-wrap: wrap;
     gap: var(--spacing-md);
+}
+
+.theme-toggle {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.theme-toggle:hover {
+    background: var(--surface-hover);
+    transform: translateY(-1px);
 }
 
 .header-content i {
@@ -147,9 +190,9 @@ body {
 .main-content {
     flex: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr;
-    gap: var(--spacing-md);
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto 1fr 1fr;
+    gap: var(--spacing-lg);
     min-height: 0;
 }
 
@@ -625,7 +668,18 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
+    .main-content {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto 1fr 1fr;
+    }
+    
+    .device-info {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 900px) {
     .main-content {
         grid-template-columns: 1fr;
         grid-template-rows: auto auto auto auto;
