@@ -49,5 +49,3 @@ void app_main(void)
 	// Set connected event callback
 	wifi_app_set_callback(&wifi_application_connected_events);
 }
-
-
