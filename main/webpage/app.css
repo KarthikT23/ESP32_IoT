@@ -190,31 +190,38 @@ body {
 .main-content {
     flex: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1.2fr;
+    grid-template-rows: auto auto auto;
     gap: var(--spacing-lg);
     min-height: 0;
 }
 
-/* Device info spans full width at top */
+/* Device info spans first column, first row */
 .device-info {
     grid-column: 1;
     grid-row: 1;
 }
+
 /* WiFi connection goes next to device info */
 .wifi-card {
     grid-column: 2;
     grid-row: 1;
 }
 
-/* Environmental sensors span full width on bottom */
-.sensor-card-container {
-    grid-column: 1 / 3;
+/* Firmware update goes below device info */
+.firmware-card {
+    grid-column: 1;
     grid-row: 2;
 }
 
-/* Firmware update goes to bottom right */
-.firmware-card {
+/* Additional controls goes next to firmware */
+.additional-controls {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+/* Environmental sensors stay on right side, expanded vertically */
+.sensor-card-container {
     grid-column: 3;
     grid-row: 1 / 3;
 }
@@ -240,12 +247,17 @@ body {
         grid-row: 1;
     }
     
-    .sensor-card-container {
-        grid-column: 1 / -1;
+    .firmware-card {
+        grid-column: 1;
         grid-row: 2;
     }
     
-    .firmware-card {
+    .additional-controls {
+        grid-column: 2;
+        grid-row: 2;
+    }
+    
+    .sensor-card-container {
         grid-column: 1 / -1;
         grid-row: 3;
     }
@@ -256,24 +268,45 @@ body {
 }
 
 @media (max-width: 900px) {
+    .main-content {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto auto;
+    }
+    
+    .device-info,
+    .wifi-card,
+    .firmware-card,
+    .additional-controls,
+    .sensor-card-container {
+        grid-column: 1;
+    }
+    
+    .device-info {
+        grid-row: 1;
+    }
+    
+    .wifi-card {
+        grid-row: 2;
+    }
+    
+    .firmware-card {
+        grid-row: 3;
+    }
+    
+    .additional-controls {
+        grid-row: 4;
+    }
+    
+    .sensor-card-container {
+        grid-row: 5;
+    }
+    
     .sensor-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 768px) {
-    .main-content {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto auto;
-    }
-    
-    .device-info,
-    .wifi-card,
-    .sensor-card-container,
-    .firmware-card {
-        grid-column: 1;
-    }
-    
     .sensor-grid {
         grid-template-columns: 1fr;
     }
