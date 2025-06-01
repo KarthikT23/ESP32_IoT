@@ -28,9 +28,10 @@
 #include "esp_ota_ops.h"
 #include "sys/param.h"
 #include <inttypes.h>
-
+#include "bmp180.h"
 #include "DHT22.h"
 #include "esp_wifi.h"
+#include <math.h>
 
 // Tag used for ESP Serial console messages
 static const char TAG[] = "http_server";
@@ -245,6 +246,31 @@ static esp_err_t http_server_get_dht_sensor_readings_json_handler(httpd_req_t *r
     return send_json_response(req, dhtSensorJSON);
 }
 
+static esp_err_t http_server_get_bmp180_sensor_readings_json_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "/bmp180Sensor.json requested");
+    char bmp180SensorJSON[300];
+    
+    // Get current readings from BMP180 (similar to DHT22 pattern)
+    bmp180_readings_t readings = BMP180_get_readings();
+    
+    if (readings.valid) {
+        sprintf(bmp180SensorJSON, 
+            "{\"temperature\":\"%.1f\",\"pressure\":\"%.2f\",\"sea_level_pressure\":\"%.2f\",\"altitude\":\"%.1f\",\"dew_point\":\"%.1f\",\"air_density\":\"%.3f\"}", 
+            readings.temperature, 
+            readings.pressure_hPa,  // Already in hPa
+            readings.sea_level_pressure / 100.0f,  // Convert Pa to hPa for consistency
+            readings.altitude,
+            isnan(readings.dew_point) ? 0.0f : readings.dew_point,  // Handle NaN values
+            readings.air_density);
+    } else {
+        sprintf(bmp180SensorJSON, 
+            "{\"temperature\":\"Error\",\"pressure\":\"Error\",\"sea_level_pressure\":\"Error\",\"altitude\":\"Error\",\"dew_point\":\"Error\",\"air_density\":\"Error\"}");
+    }
+    
+    return send_json_response(req, bmp180SensorJSON);
+}
+
 // Helper function to get header value
 static char* get_header_value(httpd_req_t *req, const char *header_name)
 {
@@ -404,6 +430,7 @@ static httpd_handle_t http_server_configure(void)
         register_uri_handler(http_server_handle, "/OTAupdate", HTTP_POST, http_server_OTA_update_handler);
         register_uri_handler(http_server_handle, "/OTAstatus", HTTP_POST, http_server_OTA_status_handler);
         register_uri_handler(http_server_handle, "/dhtSensor.json", HTTP_GET, http_server_get_dht_sensor_readings_json_handler);
+        register_uri_handler(http_server_handle, "/bmp180Sensor.json", HTTP_GET, http_server_get_bmp180_sensor_readings_json_handler);
         register_uri_handler(http_server_handle, "/wifiConnect.json", HTTP_POST, http_server_wifi_connect_json_handler);
         register_uri_handler(http_server_handle, "/wifiConnectStatus.json", HTTP_POST, http_server_wifi_connect_status_json_handler);
         register_uri_handler(http_server_handle, "/wifiConnectInfo.json", HTTP_GET, http_server_get_wifi_connect_info_json_handler);
