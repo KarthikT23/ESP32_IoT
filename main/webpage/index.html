@@ -53,7 +53,39 @@
                     </div>
                 </div>
             </div>
-
+            <!-- Firmware Update Card -->
+            <div class="card firmware-card fade-in" style="animation-delay: 0.1s;">
+                <div class="card-header">
+                    <i class="fas fa-download"></i>
+                    <h2>Firmware Update</h2>
+                </div>
+                <div class="card-content">
+                    <div class="upload-section">
+                        <div class="file-upload-area" id="file-upload-area">
+                            <input type="file" id="selected_file" accept=".bin" style="display: none;" />
+                            <div class="upload-content">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drop firmware file or <span class="upload-link">browse</span></p>
+                                <small>Accepts .bin files only</small>
+                            </div>
+                        </div>
+                        <div id="file_info" class="file-info"></div>
+                        <div class="button-group">
+                            <button class="btn btn-primary" id="update-firmware-btn" disabled>
+                                <i class="fas fa-upload"></i>
+                                Update Firmware
+                            </button>
+                        </div>
+                        <div id="ota_update_status" class="status-message"></div>
+                        <div class="progress-container" id="progress-container" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill"></div>
+                            </div>
+                            <div class="progress-text" id="progress-text">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <!-- WiFi Connection Card -->
             <div class="card wifi-card fade-in" style="animation-delay: 0.1s;">
                 <div class="card-header">
@@ -120,14 +152,18 @@
                 </div>
             </div>
 
-            <!-- Environmental Sensors Card - Expanded -->
+            <!-- Environmental Sensors Card - Organized by Sensor Type -->
             <div class="card sensor-card-container fade-in" style="animation-delay: 0.2s;">
                 <div class="card-header">
                     <i class="fas fa-thermometer-half"></i>
                     <h2>Environmental Sensors</h2>
                 </div>
                 <div class="card-content">
-                    <div class="sensor-grid">
+                    <!-- DHT22 Sensor Group -->
+                    <h3
+                        style="color: var(--text-primary); margin-bottom: var(--spacing-md); font-size: var(--font-size-base); border-bottom: 1px solid var(--border-color); padding-bottom: var(--spacing-sm);">
+                        DHT22 Sensor</h3>
+                    <div class="sensor-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: var(--spacing-xl);">
                         <div class="sensor-card temperature">
                             <div class="sensor-icon">
                                 <i class="fas fa-temperature-high"></i>
@@ -146,6 +182,24 @@
                                 <div class="sensor-value" id="humidity_reading">--</div>
                                 <div class="sensor-unit">%</div>
                                 <div class="sensor-label">Humidity</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BMP180 Sensor Group -->
+                    <h3
+                        style="color: var(--text-primary); margin-bottom: var(--spacing-md); font-size: var(--font-size-base); border-bottom: 1px solid var(--border-color); padding-bottom: var(--spacing-sm);">
+                        BMP180 Sensor</h3>
+                    <div class="sensor-grid"
+                        style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: var(--spacing-xl);">
+                        <div class="sensor-card temperature">
+                            <div class="sensor-icon">
+                                <i class="fas fa-thermometer-half"></i>
+                            </div>
+                            <div class="sensor-data">
+                                <div class="sensor-value" id="bmp180_temperature_reading">--</div>
+                                <div class="sensor-unit">°C</div>
+                                <div class="sensor-label">Temperature</div>
                             </div>
                         </div>
                         <div class="sensor-card pressure">
@@ -168,16 +222,12 @@
                                 <div class="sensor-label">Altitude</div>
                             </div>
                         </div>
-                        <div class="sensor-card sea-level">
-                            <div class="sensor-icon">
-                                <i class="fas fa-water"></i>
-                            </div>
-                            <div class="sensor-data">
-                                <div class="sensor-value" id="sea_level_reading">--</div>
-                                <div class="sensor-unit">hPa</div>
-                                <div class="sensor-label">Sea Level Pressure</div>
-                            </div>
-                        </div>
+                    </div>
+                    <!-- BH1750 Light Sensor Group -->
+                    <h3
+                        style="color: var(--text-primary); margin-bottom: var(--spacing-md); font-size: var(--font-size-base); border-bottom: 1px solid var(--border-color); padding-bottom: var(--spacing-sm);">
+                        BH1750 Light Sensor</h3>
+                    <div class="sensor-grid" style="grid-template-columns: 1fr; margin-bottom: var(--spacing-xl);">
                         <div class="sensor-card light">
                             <div class="sensor-icon">
                                 <i class="fas fa-sun"></i>
@@ -186,6 +236,22 @@
                                 <div class="sensor-value" id="light_reading">--</div>
                                 <div class="sensor-unit">lux</div>
                                 <div class="sensor-label">Ambient Light</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Calculated Values -->
+                    <h3
+                        style="color: var(--text-primary); margin-bottom: var(--spacing-md); font-size: var(--font-size-base); border-bottom: 1px solid var(--border-color); padding-bottom: var(--spacing-sm);">
+                        Calculated Values</h3>
+                    <div class="sensor-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                        <div class="sensor-card sea-level">
+                            <div class="sensor-icon">
+                                <i class="fas fa-water"></i>
+                            </div>
+                            <div class="sensor-data">
+                                <div class="sensor-value" id="sea_level_pressure_reading">--</div>
+                                <div class="sensor-unit">hPa</div>
+                                <div class="sensor-label">Sea Level Pressure</div>
                             </div>
                         </div>
                         <div class="sensor-card dew-point">
@@ -211,38 +277,16 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Firmware Update Card -->
-            <div class="card firmware-card fade-in" style="animation-delay: 0.3s;">
+            <!-- Additional Controls Card -->
+            <div class="card additional-controls fade-in" style="animation-delay: 0.4s;">
                 <div class="card-header">
-                    <i class="fas fa-download"></i>
-                    <h2>Firmware Update</h2>
+                    <i class="fas fa-cog"></i>
+                    <h2>Additional Controls</h2>
                 </div>
                 <div class="card-content">
-                    <div class="upload-section">
-                        <div class="file-upload-area" id="file-upload-area">
-                            <input type="file" id="selected_file" accept=".bin" style="display: none;" />
-                            <div class="upload-content">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                <p>Drop firmware file or <span class="upload-link">browse</span></p>
-                                <small>Accepts .bin files only</small>
-                            </div>
-                        </div>
-                        <div id="file_info" class="file-info"></div>
-                        <div class="button-group">
-                            <button class="btn btn-primary" id="update-firmware-btn" disabled>
-                                <i class="fas fa-upload"></i>
-                                Update Firmware
-                            </button>
-                        </div>
-                        <div id="ota_update_status" class="status-message"></div>
-                        <div class="progress-container" id="progress-container" style="display: none;">
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="progress-fill"></div>
-                            </div>
-                            <div class="progress-text" id="progress-text">0%</div>
-                        </div>
-                    </div>
+                    <p style="text-align: center; color: var(--text-secondary); padding: var(--spacing-xl);">
+                        This section is reserved for future features.
+                    </p>
                 </div>
             </div>
         </main>
