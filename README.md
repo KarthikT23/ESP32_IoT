@@ -15,7 +15,7 @@ Light mode
 
 
 Dark mode
-![image](https://github.com/user-attachments/assets/4ff4c579-054f-4e3b-942f-5ac6edbee3a5)
+![image](https://github.com/user-attachments/assets/ba43d25f-79e6-4634-b73e-487a735761fe)
 
 
 
