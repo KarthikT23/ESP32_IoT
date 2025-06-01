@@ -10,7 +10,8 @@ IoT Application Development with the ESP32 Using the ESP-IDF
 
 # Webpage
 Light mode
-![image](https://github.com/user-attachments/assets/65cc1ea8-8001-4834-9f40-af64c51121af)
+![image](https://github.com/user-attachments/assets/2b05787c-f1ee-4acd-86a3-e710fc17949d)
+
 
 
 Dark mode
