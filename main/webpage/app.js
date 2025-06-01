@@ -115,13 +115,20 @@ class ESP32Controller {
    */
   async getInitialData() {
     try {
+      console.log("Loading initial data...");
+
       await Promise.all([
         this.getUpdateStatus(),
         this.getSSID(),
         this.getConnectionInfo(),
+        this.getDHTSensorValues(), // Get DHT initial reading
+        this.getBMP180SensorValues(), // Get BMP180 initial reading
       ]);
+
+      console.log("Initial data loaded successfully");
     } catch (error) {
       console.error("Error loading initial data:", error);
+      this.showStatusMessage("Failed to load some initial data", "error");
     }
   }
 
@@ -135,6 +142,12 @@ class ESP32Controller {
       setInterval(() => this.getDHTSensorValues(), 5000)
     );
 
+    // BMP180 sensor readings every 5 seconds
+    this.intervals.set(
+      "bmp180",
+      setInterval(() => this.getBMP180SensorValues(), 5000)
+    );
+
     // Local time every 10 seconds
     this.intervals.set(
       "time",
@@ -143,6 +156,7 @@ class ESP32Controller {
 
     // Get initial readings immediately
     this.getDHTSensorValues();
+    this.getBMP180SensorValues();
     this.getLocalTime();
   }
 
@@ -150,24 +164,83 @@ class ESP32Controller {
    * Modern fetch wrapper with error handling
    */
   async fetchJSON(url, options = {}) {
-    try {
-      const response = await fetch(url, {
-        headers: {
-          "Content-Type": "application/json",
-          ...options.headers,
-        },
-        ...options,
-      });
+    const maxRetries = 2;
+    let lastError;
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, {
+          headers: {
+            "Content-Type": "application/json",
+            ...options.headers,
+          },
+          timeout: 8000, // 8 second timeout
+          ...options,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Validate sensor data if it's a sensor endpoint
+        if (url.includes("Sensor.json")) {
+          const sensorType = url.includes("bmp180") ? "BMP180" : "DHT";
+          if (!this.validateSensorData(data, sensorType)) {
+            throw new Error(`Invalid ${sensorType} sensor data received`);
+          }
+        }
+
+        return data;
+      } catch (error) {
+        lastError = error;
+        console.warn(
+          `Fetch attempt ${attempt} failed for ${url}:`,
+          error.message
+        );
+
+        if (attempt < maxRetries) {
+          // Wait before retry (exponential backoff)
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        }
       }
-
-      return await response.json();
-    } catch (error) {
-      console.error(`Fetch error for ${url}:`, error);
-      throw error;
     }
+
+    console.error(`All fetch attempts failed for ${url}:`, lastError);
+    throw lastError;
+  }
+
+  validateSensorData(data, sensorType) {
+    if (!data || typeof data !== "object") {
+      console.warn(`Invalid ${sensorType} sensor data:`, data);
+      return false;
+    }
+
+    // Check if all expected properties exist (for BMP180)
+    if (sensorType === "BMP180") {
+      const requiredFields = [
+        "temperature",
+        "pressure",
+        "altitude",
+        "dew_point",
+        "air_density",
+        "sea_level_pressure",
+      ];
+      const hasValidData = requiredFields.some(
+        (field) =>
+          data[field] !== undefined &&
+          data[field] !== null &&
+          data[field] !== "Error"
+      );
+
+      if (!hasValidData) {
+        console.warn(`BMP180 sensor data contains only errors:`, data);
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**
@@ -196,6 +269,93 @@ class ESP32Controller {
     }
   }
 
+  /**
+   * Get BMP180 sensor values
+   */
+  async getBMP180SensorValues() {
+    try {
+      const data = await this.fetchJSON("/bmp180Sensor.json");
+
+      // Define all BMP180 element mappings
+      const elementMappings = [
+        {
+          id: "bmp180_temperature_reading",
+          value: data.temperature,
+          label: "BMP180 Temperature",
+        },
+        { id: "pressure_reading", value: data.pressure, label: "Pressure" },
+        { id: "altitude_reading", value: data.altitude, label: "Altitude" },
+        { id: "dew_point_reading", value: data.dew_point, label: "Dew Point" },
+        {
+          id: "air_density_reading",
+          value: data.air_density,
+          label: "Air Density",
+        },
+        {
+          id: "sea_level_pressure_reading",
+          value: data.sea_level_pressure,
+          label: "Sea Level Pressure",
+        },
+      ];
+
+      // Update each element
+      elementMappings.forEach((mapping) => {
+        const element = document.getElementById(mapping.id);
+        if (element) {
+          // Handle different types of values (including "Error" strings from server)
+          let displayValue = mapping.value;
+
+          if (
+            displayValue === "Error" ||
+            displayValue === undefined ||
+            displayValue === null
+          ) {
+            displayValue = "--";
+          } else if (typeof displayValue === "number") {
+            // Format numbers appropriately
+            if (mapping.id === "air_density_reading") {
+              displayValue = displayValue.toFixed(3);
+            } else if (
+              mapping.id === "pressure_reading" ||
+              mapping.id === "sea_level_pressure_reading"
+            ) {
+              displayValue = displayValue.toFixed(2);
+            } else {
+              displayValue = displayValue.toFixed(1);
+            }
+          }
+
+          element.textContent = displayValue;
+          this.animateValue(element);
+        } else {
+          console.warn(`Element with ID '${mapping.id}' not found`);
+        }
+      });
+
+      // Log successful update
+      console.log("BMP180 sensor values updated successfully");
+    } catch (error) {
+      console.error("Error getting BMP180 sensor values:", error);
+
+      // Set error text for all BMP180 elements
+      const errorElementIds = [
+        "bmp180_temperature_reading",
+        "pressure_reading",
+        "altitude_reading",
+        "dew_point_reading",
+        "air_density_reading",
+        "sea_level_pressure_reading",
+      ];
+
+      errorElementIds.forEach((id) => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.textContent = "Error";
+          element.style.color = "var(--error-color, #ff4444)";
+        }
+      });
+    }
+  }
   /**
    * Get local time
    */
@@ -516,11 +676,13 @@ class ESP32Controller {
           connectBtn.innerHTML = '<i class="fas fa-plug"></i> Connect';
         } else if (data.wifi_connect_status === 3) {
           // Connection successful
-          console.log("WiFi connection successful, stopping polling and showing success message");
-          
+          console.log(
+            "WiFi connection successful, stopping polling and showing success message"
+          );
+
           // Stop polling immediately to prevent further status checks
           this.stopWifiStatusPolling();
-          
+
           // Show success message
           this.showStatusMessage(
             "Connection Success! Page will refresh automatically...",
@@ -699,12 +861,20 @@ class ESP32Controller {
    * Animate value changes
    */
   animateValue(element) {
-    element.style.transform = "scale(1.1)";
-    element.style.transition = "transform 0.2s ease";
+    if (!element) return;
 
-    setTimeout(() => {
-      element.style.transform = "scale(1)";
-    }, 200);
+    // Reset any error styling first
+    element.style.color = "";
+
+    // Only animate if the value is not an error
+    if (element.textContent !== "Error" && element.textContent !== "--") {
+      element.style.transform = "scale(1.1)";
+      element.style.transition = "transform 0.2s ease";
+
+      setTimeout(() => {
+        element.style.transform = "scale(1)";
+      }, 200);
+    }
   }
 
   /**
