@@ -9,6 +9,7 @@
 #define MAIN_HTTP_SERVER_H_
 
 #include "portmacro.h"
+#include "bmp180.h"
 
 // OTA Update Status Constants
 #define OTA_UPDATE_PENDING      0
