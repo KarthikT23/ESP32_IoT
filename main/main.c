@@ -16,6 +16,7 @@
 #include "wifi_app.h"
 #include "esp_log.h"
 #include "sntp_time_sync.h"
+#include "bmp180.h"
 
 static const char TAG[] = "main";
 
@@ -44,4 +45,7 @@ void app_main(void)
 	
 	// Start DHT22 sensor task
 	DHT22_task_start();
+	
+	// Start BMP180 sensor task (SDA=21, SCL=22, altitude=920m)
+	BMP180_task_start(21, 22, 920.0f);
 }
